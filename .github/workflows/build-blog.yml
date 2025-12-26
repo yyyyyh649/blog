@@ -1,0 +1,48 @@
+# 博客自动构建和部署工作流
+# 
+# 当 markdown 目录中的文件发生变化时，自动执行以下操作：
+# 1. 将 Markdown 文件转换为 HTML
+# 2. 更新首页和文章列表页
+# 3. 部署到 GitHub Pages
+
+name: Build and Deploy Blog
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'markdown/**'
+      - 'scripts/**'
+  workflow_dispatch: # 允许手动触发
+
+# 设置工作流权限
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build blog
+        run: node scripts/build.js
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git diff --staged --quiet || git commit -m "🚀 Auto-build: Update blog posts"
+          git push

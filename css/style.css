@@ -225,6 +225,18 @@ img {
     font-weight: 500;
 }
 
+.post-pinned {
+    color: var(--color-accent);
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.post-card.pinned,
+.post-list-item.pinned {
+    border-left: 3px solid var(--color-accent);
+    background: linear-gradient(to right, rgba(139, 115, 85, 0.05), transparent);
+}
+
 .post-title {
     font-family: var(--font-serif);
     font-size: 1.25rem;
