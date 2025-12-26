@@ -182,7 +182,7 @@ excerpt: "这是文章的摘要，用于在列表页显示..."
 ```
 blog/
 ├── .github/
-│   └── copilot-instructions.md  # 本文件
+│   └── copilot-instructions.md  # Copilot 开发指南
 ├── css/
 │   └── style.css                # 主样式文件
 ├── posts/
@@ -214,7 +214,7 @@ blog/
 ### 部署流程
 1. 提交代码到 GitHub
 2. GitHub Pages 自动构建部署
-3. 访问 `https://yyyyyh649.github.io/blog/` 查看效果
+3. 访问 `https://[username].github.io/blog/` 查看效果（将 [username] 替换为实际的 GitHub 用户名）
 
 ## 注意事项
 
@@ -251,15 +251,20 @@ blog/
 
 ## 未来改进方向
 
+### 高优先级
 - [ ] 迁移到 Hugo 或 Hexo 静态站点生成器
 - [ ] 支持 Markdown 写作
-- [ ] 添加搜索功能
 - [ ] 实现文章归档页面
+
+### 中优先级
+- [ ] 添加搜索功能
 - [ ] 添加 RSS 订阅
 - [ ] 支持文章标签系统
+- [ ] 优化 SEO
+
+### 低优先级
 - [ ] 添加评论系统（如 Giscus）
 - [ ] 实现暗色模式
-- [ ] 优化 SEO
 
 ---
 
