@@ -95,15 +95,22 @@ function markdownToHtml(markdown) {
     // 处理图片
     html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
     
-    // 处理无序列表
-    html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+    // 处理无序列表 - 添加标记以区分
+    html = html.replace(/^[\-\*] (.+)$/gm, '<li data-list="ul">$1</li>');
     
-    // 处理有序列表
-    html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+    // 处理有序列表 - 添加标记以区分
+    html = html.replace(/^\d+\. (.+)$/gm, '<li data-list="ol">$1</li>');
     
-    // 将连续的 <li> 包装在 <ul> 中
-    html = html.replace(/(<li>.*<\/li>\n?)+/g, (match) => {
-        return '<ul>\n' + match + '</ul>\n';
+    // 将连续的无序列表 <li> 包装在 <ul> 中
+    html = html.replace(/(<li data-list="ul">.*?<\/li>\n?)+/g, (match) => {
+        const cleanedItems = match.replace(/ data-list="ul"/g, '');
+        return '<ul>\n' + cleanedItems + '</ul>\n';
+    });
+    
+    // 将连续的有序列表 <li> 包装在 <ol> 中
+    html = html.replace(/(<li data-list="ol">.*?<\/li>\n?)+/g, (match) => {
+        const cleanedItems = match.replace(/ data-list="ol"/g, '');
+        return '<ol>\n' + cleanedItems + '</ol>\n';
     });
     
     // 处理水平线
@@ -127,6 +134,8 @@ function markdownToHtml(markdown) {
             line.startsWith('<blockquote') || 
             line.startsWith('<ul') || 
             line.startsWith('</ul') ||
+            line.startsWith('<ol') || 
+            line.startsWith('</ol') ||
             line.startsWith('<li') ||
             line.startsWith('<hr') ||
             line.startsWith('<img') ||
@@ -388,6 +397,12 @@ function main() {
         console.log('📁 已创建 markdown 目录');
     }
     
+    // 确保 posts 目录存在
+    if (!fs.existsSync(POSTS_DIR)) {
+        fs.mkdirSync(POSTS_DIR, { recursive: true });
+        console.log('📁 已创建 posts 目录');
+    }
+    
     // 读取所有 markdown 文件
     const files = fs.readdirSync(MARKDOWN_DIR).filter(file => file.endsWith('.md'));
     
@@ -423,11 +438,40 @@ function main() {
         // 转换 markdown 为 HTML
         const htmlContent = markdownToHtml(body);
         
+        // 生成摘要：如果没有提供，则从正文中截取
+        let excerpt = frontmatter.excerpt;
+        if (!excerpt) {
+            // 清理 markdown 语法
+            let cleanBody = body.replace(/[#*_`\[\]]/g, '').trim();
+            // 获取第一段（到第一个空行为止）
+            const firstPara = cleanBody.split('\n\n')[0].replace(/\n/g, ' ').trim();
+            // 如果第一段超过100字符，在最后一个完整的标点或空格处截断
+            if (firstPara.length > 100) {
+                let truncated = firstPara.slice(0, 100);
+                // 查找最后一个合适的截断点（中文标点、英文标点或空格）
+                const lastBreak = Math.max(
+                    truncated.lastIndexOf('。'),
+                    truncated.lastIndexOf('，'),
+                    truncated.lastIndexOf('！'),
+                    truncated.lastIndexOf('？'),
+                    truncated.lastIndexOf(' '),
+                    truncated.lastIndexOf('.'),
+                    truncated.lastIndexOf(',')
+                );
+                if (lastBreak > 50) {
+                    truncated = truncated.slice(0, lastBreak + 1);
+                }
+                excerpt = truncated.trim() + '...';
+            } else {
+                excerpt = firstPara + '...';
+            }
+        }
+        
         const post = {
             title: frontmatter.title,
             date: frontmatter.date,
             category: frontmatter.category || '随想杂记',
-            excerpt: frontmatter.excerpt || body.slice(0, 100).replace(/[#*_`\[\]]/g, '').trim() + '...',
+            excerpt: excerpt,
             pinned: frontmatter.pinned === true || frontmatter.pinned === 'true',
             slug: slug,
             htmlContent: htmlContent
